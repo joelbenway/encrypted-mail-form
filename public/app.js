@@ -1,4 +1,8 @@
-﻿document.addEventListener('DOMContentLoaded', function() {
+﻿// Copyright (c) 2026  Joel Benway
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Please see end of file for extended copyright information
+
+document.addEventListener('DOMContentLoaded', function() {
   var form = document.getElementById('contact-form');
   var emailInput = document.getElementById('sender-email');
   var messageInput = document.getElementById('message');
@@ -97,6 +101,21 @@
   form.addEventListener('reset', function() {
     clearStatus();
     unlockKeyField();
-    lastCheckedEmail = '';
-  });
+lastCheckedEmail = '';
+});
+
+// This file is part of joel.benway.me.
+//
+// joel.benway.me is free software: you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option) any
+// later version.
+//
+// joel.benway.me is distributed in the hope that it will be useful, but WITHOUT
+// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+// details.
+//
+// You should have received a copy of the GNU General Public License along with
+// joel.benway.me. If not, see <https://www.gnu.org/licenses/>.
 });

@@ -1,3 +1,7 @@
+// Copyright (c) 2026  Joel Benway
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Please see end of file for extended copyright information
+
 import * as openpgp from 'openpgp';
 
 const MAX_MESSAGE_LENGTH = 50000;
@@ -126,3 +130,18 @@ export default {
     }
   }
 };
+
+// This file is part of joel.benway.me.
+//
+// joel.benway.me is free software: you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option) any
+// later version.
+//
+// joel.benway.me is distributed in the hope that it will be useful, but WITHOUT
+// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+// details.
+//
+// You should have received a copy of the GNU General Public License along with
+// joel.benway.me. If not, see <https://www.gnu.org/licenses/>.
