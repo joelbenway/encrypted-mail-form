@@ -4,7 +4,7 @@
 
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "encrypted-email-website",
+  "name": "encrypted-email-form",
   "main": "src/worker.js",
   "compatibility_date": "2024-11-01",
   "assets": {
