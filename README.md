@@ -40,6 +40,9 @@ npx wrangler secret put RECIPIENT_PUBLIC_KEY
 
 # Set your Resend API Key
 npx wrangler secret put RESEND_API_KEY
+
+# Set the "From" email address for outgoing emails
+npx wrangler secret put FROM_EMAIL
 ```
 
 ### 2. Manual Deployment

@@ -75,7 +75,7 @@ export default {
       return jsonResponse({ error: 'PGP key too large' }, 400);
     }
 
-    if (!env.RECIPIENT_PUBLIC_KEY || !env.RECIPIENT_EMAIL || !env.RESEND_API_KEY) {
+    if (!env.RECIPIENT_PUBLIC_KEY || !env.RECIPIENT_EMAIL || !env.RESEND_API_KEY || !env.FROM_EMAIL) {
       return jsonResponse({ error: 'Server configuration error: missing secrets' }, 500);
     }
 
@@ -90,7 +90,7 @@ export default {
       });
 
       const resendPayload = {
-        from: 'Secure Contact Form <onboarding@resend.dev>',
+        from: `Secure Contact Form <${env.FROM_EMAIL}>`,
         to: [env.RECIPIENT_EMAIL],
         reply_to: [email],
         subject: `[Encrypted Contact Form] Message from ${email}`,

@@ -39,6 +39,7 @@ function makeEnv(overrides = {}) {
     RECIPIENT_PUBLIC_KEY: testPublicKey,
     RECIPIENT_EMAIL,
     RESEND_API_KEY: 'test-resend-key',
+    FROM_EMAIL: 'secure@email.benway.me',
     ASSETS: { fetch: () => new Response('static asset', { status: 200 }) },
     ...overrides
   };
@@ -125,7 +126,7 @@ describe('encryption and delivery', () => {
     const payload = JSON.parse(init.body);
     expect(init.headers.Authorization).toBe('Bearer test-resend-key');
     expect(payload.to).toEqual([RECIPIENT_EMAIL]);
-    expect(payload.from).toBe('Secure Contact Form <onboarding@resend.dev>');
+    expect(payload.from).toBe('Secure Contact Form <secure@email.benway.me>');
 
     const decrypted = await openpgp.decrypt({
       message: await openpgp.readMessage({ armoredMessage: payload.text }),
