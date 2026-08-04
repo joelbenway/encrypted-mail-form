@@ -1,0 +1,292 @@
+﻿/* ===========================================
+   Theme tokens — edit this block to restyle.
+   Keep :root intact; do not inline these values.
+   =========================================== */
+:root {
+  --bg: #F6F4EE;
+  --text: #18181B;
+  --text-muted: #66635B;
+  --surface: #FFFFFF;
+  --border: #18181B;
+  --accent: #FA500F;
+  --accent-hover: #E04400;
+  --locked-bg: #EFECE6;
+  --locked-text: #66635B;
+  --locked-border: #B0AC9F;
+  --focus-ring: rgba(250, 80, 15, 0.25);
+  --success: #2a7a4a;
+  --error: #d63;
+
+  --stripe-1: #FFD800;
+  --stripe-2: #FFAF00;
+  --stripe-3: #FF8205;
+  --stripe-4: #FA500F;
+  --stripe-5: #E10500;
+
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'SF Mono', 'JetBrains Mono', ui-monospace, monospace;
+
+  --shadow-hard: 4px 4px 0px var(--text);
+  --shadow-hard-accent: 4px 4px 0px var(--accent);
+  --shadow-press: 2px 2px 0px var(--text);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { height: 100%; }
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; text-decoration: none; }
+
+/* === Header === */
+
+.header {
+  width: 100%;
+  border-bottom: 2px solid var(--text);
+}
+
+.header-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  max-width: 1100px;
+  width: 92%;
+  margin: 0 auto;
+  padding: 32px 0;
+}
+
+.name {
+  font-family: var(--font-sans);
+  font-weight: 900;
+  font-size: clamp(1.8rem, 5vw, 3rem);
+  letter-spacing: 0.05em;
+  color: var(--text);
+  line-height: 1;
+  text-transform: uppercase;
+  text-shadow: 1px 1px 0px rgba(0,0,0,0.08);
+}
+
+.nav-links {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.pill {
+  display: inline-block;
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  padding: 8px 16px;
+  border: 2px solid var(--text);
+  box-shadow: 3px 3px 0px var(--text);
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+.pill:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0px var(--text);
+}
+
+.pill:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0px var(--text);
+}
+
+/* === Main === */
+
+.main {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 56px 0;
+}
+
+.main-inner {
+  width: 92%;
+  max-width: 960px;
+}
+
+/* === Form === */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.optional {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text-muted);
+}
+
+input, textarea {
+  display: block;
+  width: 100%;
+  border: 2.5px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.95rem;
+  padding: 12px 14px;
+  outline: none;
+  box-shadow: var(--shadow-hard);
+  transition: box-shadow 150ms ease, border-color 150ms ease;
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--text-muted);
+}
+
+input:focus, textarea:focus {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-hard-accent);
+}
+
+textarea {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  resize: vertical;
+  min-height: 70px;
+}
+
+.key-locked {
+  background: var(--locked-bg);
+  color: var(--locked-text);
+  border-color: var(--locked-border);
+  box-shadow: 3px 3px 0px var(--locked-border);
+  cursor: default;
+}
+
+/* === Status === */
+
+.status {
+  font-size: 0.85rem;
+  min-height: 1.2em;
+  color: var(--text-muted);
+  transition: color 200ms;
+}
+
+.status.success { color: var(--success); }
+.status.error   { color: var(--error); }
+.status.hidden  { visibility: hidden; }
+
+/* === Actions === */
+
+.actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.btn {
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: 2.5px solid var(--border);
+  border-radius: 4px;
+  padding: 12px 28px;
+  box-shadow: var(--shadow-hard);
+  transition: transform 120ms ease, box-shadow 120ms ease, background 150ms ease;
+}
+
+.btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: var(--shadow-press);
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: var(--surface);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.btn-reset {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: var(--shadow-press);
+  transform: translate(2px, 2px);
+}
+
+/* === Footer (Mistral Sunset Stripes) === */
+
+.footer {
+  width: 100%;
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.footer .stripe-band:nth-child(1) { height: clamp(12px, 3.75vw, 30px); background: var(--stripe-1); }
+.footer .stripe-band:nth-child(2) { height: clamp(12px, 3.75vw, 30px); background: var(--stripe-2); }
+.footer .stripe-band:nth-child(3) { height: clamp(12px, 3.75vw, 30px); background: var(--stripe-3); }
+.footer .stripe-band:nth-child(4) { height: clamp(12px, 3.75vw, 30px); background: var(--stripe-4); }
+.footer .stripe-band:nth-child(5) { height: clamp(12px, 3.75vw, 30px); background: var(--stripe-5); }
+
+/* === Responsive === */
+
+@media (max-width: 600px) {
+  .header-inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+  }
+  .nav-links {
+    width: 100%;
+  }
+  .pill {
+    flex: 1;
+    text-align: center;
+  }
+  .main-inner {
+    width: 94%;
+  }
+  .actions {
+    flex-wrap: wrap;
+  }
+}
