@@ -206,7 +206,7 @@ textarea {
 
 .status.success { color: var(--success); }
 .status.error   { color: var(--error); }
-.status.hidden  { visibility: hidden; }
+.status.hidden  { display: none; }
 
 /* === Actions === */
 
