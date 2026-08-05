@@ -9,25 +9,25 @@
   "compatibility_date": "2024-11-01",
   "assets": {
     "directory": "./public",
-    "binding": "ASSETS"
+    "binding": "ASSETS",
   },
   "observability": {
-    "enabled": true
+    "enabled": true,
   },
   "durable_objects": {
     "bindings": [
       {
         "name": "RATE_LIMITER",
-        "class_name": "RateLimiter"
-      }
-    ]
+        "class_name": "RateLimiter",
+      },
+    ],
   },
   "migrations": [
     {
       "tag": "v1",
-      "new_sqlite_classes": ["RateLimiter"]
-    }
-  ]
+      "new_sqlite_classes": ["RateLimiter"],
+    },
+  ],
 }
 
 // This file is part of joel.benway.me.

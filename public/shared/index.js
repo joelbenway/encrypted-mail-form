@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Please see end of file for extended copyright information
 
-export * from "./constants.js";
-export * from "./utils.js";
+export * from './constants.js';
+export * from './utils.js';
 
 // This file is part of encrypted-email-form.
 //

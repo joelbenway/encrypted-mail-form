@@ -2,11 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Please see end of file for extended copyright information
 
-import {
-  EMAIL_REGEX,
-  FETCH_TIMEOUT_MS,
-  isCompletePgpKey,
-} from "./shared/index.js";
+import { EMAIL_REGEX, FETCH_TIMEOUT_MS, isCompletePgpKey } from './shared/index.js';
 
 async function fetchFromKeysOpenPGP(email) {
   const controller = new AbortController();
@@ -14,17 +10,17 @@ async function fetchFromKeysOpenPGP(email) {
   try {
     const response = await fetch(
       `https://keys.openpgp.org/vks/v1/by-email/${encodeURIComponent(email)}`,
-      { signal: controller.signal },
+      { signal: controller.signal }
     );
     if (response.ok) {
       return await response.text();
     }
   } catch (err) {
-    console.debug("keys.openpgp.org lookup failed:", err);
+    console.debug('keys.openpgp.org lookup failed:', err);
   } finally {
     clearTimeout(timeout);
   }
-  return "";
+  return '';
 }
 
 async function fetchFromProtonMail(email) {
@@ -33,29 +29,29 @@ async function fetchFromProtonMail(email) {
   try {
     const response = await fetch(
       `https://api.protonmail.ch/pks/lookup?op=get&search=${encodeURIComponent(email)}`,
-      { signal: controller.signal },
+      { signal: controller.signal }
     );
     if (response.ok) {
       return await response.text();
     }
   } catch (err) {
-    console.debug("ProtonMail lookup failed:", err);
+    console.debug('ProtonMail lookup failed:', err);
   } finally {
     clearTimeout(timeout);
   }
-  return "";
+  return '';
 }
 
 function lockKeyField(senderKeyInput) {
   if (isCompletePgpKey(senderKeyInput.value)) {
     senderKeyInput.readOnly = true;
-    senderKeyInput.classList.add("key-locked");
+    senderKeyInput.classList.add('key-locked');
   }
 }
 
 function unlockKeyField(senderKeyInput) {
   senderKeyInput.readOnly = false;
-  senderKeyInput.classList.remove("key-locked");
+  senderKeyInput.classList.remove('key-locked');
 }
 
 function showStatus(statusBanner, text, type) {
@@ -64,27 +60,17 @@ function showStatus(statusBanner, text, type) {
 }
 
 function clearStatus(statusBanner) {
-  statusBanner.textContent = "";
-  statusBanner.className = "status hidden";
+  statusBanner.textContent = '';
+  statusBanner.className = 'status hidden';
 }
 
-async function lookupPGPKey(
-  email,
-  senderKeyInput,
-  statusBanner,
-  lastCheckedEmailRef,
-) {
-  if (
-    !email ||
-    !EMAIL_REGEX.test(email) ||
-    email === lastCheckedEmailRef.current
-  )
-    return;
+async function lookupPGPKey(email, senderKeyInput, statusBanner, lastCheckedEmailRef) {
+  if (!email || !EMAIL_REGEX.test(email) || email === lastCheckedEmailRef.current) return;
   if (isCompletePgpKey(senderKeyInput.value)) return;
 
   const initialKeyValue = senderKeyInput.value;
   lastCheckedEmailRef.current = email;
-  showStatus(statusBanner, "Looking up key…", "info");
+  showStatus(statusBanner, 'Looking up key…', 'info');
 
   let keyText = await fetchFromKeysOpenPGP(email);
   if (email !== lastCheckedEmailRef.current) return;
@@ -99,37 +85,32 @@ async function lookupPGPKey(
   if (isCompletePgpKey(keyText)) {
     senderKeyInput.value = keyText;
     lockKeyField(senderKeyInput);
-    showStatus(statusBanner, "Key found and attached", "success");
+    showStatus(statusBanner, 'Key found and attached', 'success');
   } else {
     clearStatus(statusBanner);
   }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  const form = document.getElementById("contact-form");
-  const emailInput = document.getElementById("sender-email");
-  const messageInput = document.getElementById("message");
-  const senderKeyInput = document.getElementById("sender-key");
-  const statusBanner = document.getElementById("status-message");
-  const submitBtn = document.getElementById("submit-btn");
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('contact-form');
+  const emailInput = document.getElementById('sender-email');
+  const messageInput = document.getElementById('message');
+  const senderKeyInput = document.getElementById('sender-key');
+  const statusBanner = document.getElementById('status-message');
+  const submitBtn = document.getElementById('submit-btn');
 
-  const lastCheckedEmailRef = { current: "" };
+  const lastCheckedEmailRef = { current: '' };
 
-  senderKeyInput.addEventListener("input", () => {
+  senderKeyInput.addEventListener('input', () => {
     if (senderKeyInput.readOnly) return;
     lockKeyField(senderKeyInput);
   });
 
-  emailInput.addEventListener("blur", () => {
-    lookupPGPKey(
-      emailInput.value.trim(),
-      senderKeyInput,
-      statusBanner,
-      lastCheckedEmailRef,
-    );
+  emailInput.addEventListener('blur', () => {
+    lookupPGPKey(emailInput.value.trim(), senderKeyInput, statusBanner, lastCheckedEmailRef);
   });
 
-  form.addEventListener("submit", async (e) => {
+  form.addEventListener('submit', async e => {
     e.preventDefault();
     clearStatus(statusBanner);
 
@@ -138,17 +119,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const senderKey = senderKeyInput.value.trim();
 
     if (!email || !message) {
-      showStatus(statusBanner, "Email and message required", "error");
+      showStatus(statusBanner, 'Email and message required', 'error');
       return;
     }
 
     submitBtn.disabled = true;
-    showStatus(statusBanner, "Encrypting and sending…", "info");
+    showStatus(statusBanner, 'Encrypting and sending…', 'info');
 
     try {
-      const response = await fetch("/api/send-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email,
           message,
@@ -160,23 +141,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (response.ok && data.success) {
         form.reset();
-        lastCheckedEmailRef.current = "";
-        showStatus(statusBanner, "Message sent encrypted", "success");
+        lastCheckedEmailRef.current = '';
+        showStatus(statusBanner, 'Message sent encrypted', 'success');
       } else {
-        showStatus(statusBanner, data.error || "Failed to send", "error");
+        showStatus(statusBanner, data.error || 'Failed to send', 'error');
       }
     } catch (err) {
-      console.error("Send failed:", err);
-      showStatus(statusBanner, "Network error", "error");
+      console.error('Send failed:', err);
+      showStatus(statusBanner, 'Network error', 'error');
     } finally {
       submitBtn.disabled = false;
     }
   });
 
-  form.addEventListener("reset", () => {
+  form.addEventListener('reset', () => {
     clearStatus(statusBanner);
     unlockKeyField(senderKeyInput);
-    lastCheckedEmailRef.current = "";
+    lastCheckedEmailRef.current = '';
   });
 });
 

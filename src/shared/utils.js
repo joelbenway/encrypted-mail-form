@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Please see end of file for extended copyright information
 
-import { PGP_BEGIN, PGP_END } from "./constants.js";
+import { PGP_BEGIN, PGP_END } from './constants.js';
 
 export function isCompletePgpKey(key) {
   const trimmed = key.trim();

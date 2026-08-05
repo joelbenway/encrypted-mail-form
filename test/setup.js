@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Please see end of file for extended copyright information
 
-import { vi } from "vitest";
+import { vi } from 'vitest';
 
 global.fetch = vi.fn();
 
@@ -18,15 +18,15 @@ function setupDOM() {
   `;
 
   // Use native form reset behavior
-  const form = document.getElementById("contact-form");
-  const keyInput = document.getElementById("sender-key");
-  const statusBanner = document.getElementById("status-message");
+  const form = document.getElementById('contact-form');
+  const keyInput = document.getElementById('sender-key');
+  const statusBanner = document.getElementById('status-message');
   const originalReset = form.reset.bind(form);
   form.reset = vi.fn(() => {
     originalReset();
-    keyInput.value = "";
-    statusBanner.textContent = "";
-    statusBanner.className = "status hidden";
+    keyInput.value = '';
+    statusBanner.textContent = '';
+    statusBanner.className = 'status hidden';
   });
 }
 

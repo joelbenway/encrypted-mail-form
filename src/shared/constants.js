@@ -3,8 +3,8 @@
 // Please see end of file for extended copyright information
 
 export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-export const PGP_BEGIN = "-----BEGIN PGP PUBLIC KEY BLOCK-----";
-export const PGP_END = "-----END PGP PUBLIC KEY BLOCK-----";
+export const PGP_BEGIN = '-----BEGIN PGP PUBLIC KEY BLOCK-----';
+export const PGP_END = '-----END PGP PUBLIC KEY BLOCK-----';
 export const MAX_MESSAGE_LENGTH = 50000;
 export const MAX_KEY_LENGTH = 20000;
 export const MAX_REQUESTS_PER_HOUR = 5;
