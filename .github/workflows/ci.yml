@@ -1,5 +1,8 @@
 name: CI
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: [master]
@@ -9,6 +12,8 @@ on:
 jobs:
   format:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v7
         with:
@@ -24,15 +29,7 @@ jobs:
         run: npm ci
 
       - name: Format code with Prettier
-        run: npx prettier --write .
-
-      - name: Commit formatted changes
-        if: github.event_name == 'push'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git diff --quiet || git commit -am "chore: format code with prettier"
-          git push
+        run: npm run format:check
 
   test:
     needs: [format]
