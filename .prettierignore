@@ -1,0 +1,7 @@
+# Files ignored by Prettier
+COPYING.md
+node_modules/
+dist/
+build/
+.wrangler/
+package-lock.json
