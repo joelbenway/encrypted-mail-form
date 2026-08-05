@@ -9,6 +9,13 @@ const MAX_KEY_LENGTH = 20000;
 const MAX_REQUESTS_PER_HOUR = 5;
 const RATE_WINDOW_MS = 60 * 60 * 1000;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PGP_BEGIN = "-----BEGIN PGP PUBLIC KEY BLOCK-----";
+const PGP_END = "-----END PGP PUBLIC KEY BLOCK-----";
+
+function isCompletePgpKey(key) {
+  const trimmed = key.trim();
+  return trimmed.startsWith(PGP_BEGIN) && trimmed.includes(PGP_END);
+}
 
 const requestTimestamps = new Map();
 
@@ -57,6 +64,10 @@ export default {
     try {
       body = await request.json();
     } catch (err) {
+      return jsonResponse({ error: "Invalid JSON body" }, 400);
+    }
+
+    if (body === null || typeof body !== "object") {
       return jsonResponse({ error: "Invalid JSON body" }, 400);
     }
 
@@ -118,7 +129,7 @@ export default {
         text: encryptedMessage,
       };
 
-      if (senderPublicKey.startsWith("-----BEGIN PGP PUBLIC KEY BLOCK-----")) {
+      if (isCompletePgpKey(senderPublicKey)) {
         resendPayload.attachments = [
           {
             filename: "sender-key.asc",

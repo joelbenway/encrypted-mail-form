@@ -4,6 +4,13 @@
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const FETCH_TIMEOUT_MS = 5000;
+const PGP_BEGIN = "-----BEGIN PGP PUBLIC KEY BLOCK-----";
+const PGP_END = "-----END PGP PUBLIC KEY BLOCK-----";
+
+function isCompletePgpKey(key) {
+  const trimmed = key.trim();
+  return trimmed.startsWith(PGP_BEGIN) && trimmed.includes(PGP_END);
+}
 
 async function fetchFromKeysOpenPGP(email) {
   var controller = new AbortController();
@@ -51,11 +58,7 @@ async function fetchFromProtonMail(email) {
 }
 
 function lockKeyField(senderKeyInput) {
-  if (
-    senderKeyInput.value
-      .trim()
-      .startsWith("-----BEGIN PGP PUBLIC KEY BLOCK-----")
-  ) {
+  if (isCompletePgpKey(senderKeyInput.value)) {
     senderKeyInput.readOnly = true;
     senderKeyInput.classList.add("key-locked");
   }
@@ -88,21 +91,16 @@ async function lookupPGPKey(
     email === lastCheckedEmailRef.current
   )
     return;
-  if (
-    senderKeyInput.value
-      .trim()
-      .startsWith("-----BEGIN PGP PUBLIC KEY BLOCK-----")
-  )
-    return;
+  if (isCompletePgpKey(senderKeyInput.value)) return;
   lastCheckedEmailRef.current = email;
   showStatus(statusBanner, "Looking up key\u2026", "info");
   var keyText = await fetchFromKeysOpenPGP(email);
   if (email !== lastCheckedEmailRef.current) return;
-  if (!keyText || !keyText.includes("-----BEGIN PGP PUBLIC KEY BLOCK-----")) {
+  if (!isCompletePgpKey(keyText)) {
     keyText = await fetchFromProtonMail(email);
   }
   if (email !== lastCheckedEmailRef.current) return;
-  if (keyText && keyText.includes("-----BEGIN PGP PUBLIC KEY BLOCK-----")) {
+  if (isCompletePgpKey(keyText)) {
     senderKeyInput.value = keyText;
     lockKeyField(senderKeyInput);
     showStatus(statusBanner, "Key found and attached", "success");
