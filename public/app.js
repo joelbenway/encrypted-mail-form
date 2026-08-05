@@ -6,150 +6,201 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const FETCH_TIMEOUT_MS = 5000;
 
 async function fetchFromKeysOpenPGP(email) {
+  var controller = new AbortController();
+  var timeout = setTimeout(function () {
+    controller.abort();
+  }, FETCH_TIMEOUT_MS);
   try {
-    var controller = new AbortController();
-    var timeout = setTimeout(function () { controller.abort(); }, FETCH_TIMEOUT_MS);
-    var response = await fetch('https://keys.openpgp.org/vks/v1/by-email/' + encodeURIComponent(email), {
-      signal: controller.signal
-    });
-    clearTimeout(timeout);
+    var response = await fetch(
+      "https://keys.openpgp.org/vks/v1/by-email/" + encodeURIComponent(email),
+      {
+        signal: controller.signal,
+      },
+    );
     if (response.ok) {
       return await response.text();
     }
   } catch (err) {
+  } finally {
+    clearTimeout(timeout);
   }
-  return '';
+  return "";
 }
 
 async function fetchFromProtonMail(email) {
+  var controller = new AbortController();
+  var timeout = setTimeout(function () {
+    controller.abort();
+  }, FETCH_TIMEOUT_MS);
   try {
-    var controller = new AbortController();
-    var timeout = setTimeout(function () { controller.abort(); }, FETCH_TIMEOUT_MS);
-    var response = await fetch('https://api.protonmail.ch/pks/lookup?op=get&search=' + encodeURIComponent(email), {
-      signal: controller.signal
-    });
-    clearTimeout(timeout);
+    var response = await fetch(
+      "https://api.protonmail.ch/pks/lookup?op=get&search=" +
+        encodeURIComponent(email),
+      {
+        signal: controller.signal,
+      },
+    );
     if (response.ok) {
       return await response.text();
     }
   } catch (err) {
+  } finally {
+    clearTimeout(timeout);
   }
-  return '';
+  return "";
 }
 
 function lockKeyField(senderKeyInput) {
-  if (senderKeyInput.value.trim().startsWith('-----BEGIN PGP PUBLIC KEY BLOCK-----')) {
+  if (
+    senderKeyInput.value
+      .trim()
+      .startsWith("-----BEGIN PGP PUBLIC KEY BLOCK-----")
+  ) {
     senderKeyInput.readOnly = true;
-    senderKeyInput.classList.add('key-locked');
+    senderKeyInput.classList.add("key-locked");
   }
 }
 
 function unlockKeyField(senderKeyInput) {
   senderKeyInput.readOnly = false;
-  senderKeyInput.classList.remove('key-locked');
+  senderKeyInput.classList.remove("key-locked");
 }
 
 function showStatus(statusBanner, text, type) {
   statusBanner.textContent = text;
-  statusBanner.className = 'status ' + type;
+  statusBanner.className = "status " + type;
 }
 
 function clearStatus(statusBanner) {
-  statusBanner.textContent = '';
-  statusBanner.className = 'status hidden';
+  statusBanner.textContent = "";
+  statusBanner.className = "status hidden";
 }
 
-async function lookupPGPKey(email, senderKeyInput, statusBanner, lastCheckedEmailRef) {
-  if (!email || !EMAIL_REGEX.test(email) || email === lastCheckedEmailRef.current) return;
-  if (senderKeyInput.value.trim().startsWith('-----BEGIN PGP PUBLIC KEY BLOCK-----')) return;
+async function lookupPGPKey(
+  email,
+  senderKeyInput,
+  statusBanner,
+  lastCheckedEmailRef,
+) {
+  if (
+    !email ||
+    !EMAIL_REGEX.test(email) ||
+    email === lastCheckedEmailRef.current
+  )
+    return;
+  if (
+    senderKeyInput.value
+      .trim()
+      .startsWith("-----BEGIN PGP PUBLIC KEY BLOCK-----")
+  )
+    return;
   lastCheckedEmailRef.current = email;
-  showStatus(statusBanner, 'Looking up key\u2026', 'info');
+  showStatus(statusBanner, "Looking up key\u2026", "info");
   var keyText = await fetchFromKeysOpenPGP(email);
-  if (!keyText || !keyText.includes('-----BEGIN PGP PUBLIC KEY BLOCK-----')) {
+  if (email !== lastCheckedEmailRef.current) return;
+  if (!keyText || !keyText.includes("-----BEGIN PGP PUBLIC KEY BLOCK-----")) {
     keyText = await fetchFromProtonMail(email);
   }
-  if (keyText && keyText.includes('-----BEGIN PGP PUBLIC KEY BLOCK-----')) {
+  if (email !== lastCheckedEmailRef.current) return;
+  if (keyText && keyText.includes("-----BEGIN PGP PUBLIC KEY BLOCK-----")) {
     senderKeyInput.value = keyText;
     lockKeyField(senderKeyInput);
-    showStatus(statusBanner, 'Key found and attached', 'success');
+    showStatus(statusBanner, "Key found and attached", "success");
   } else {
     clearStatus(statusBanner);
   }
 }
 
-document.addEventListener('DOMContentLoaded', function () {
-  var form = document.getElementById('contact-form');
-  var emailInput = document.getElementById('sender-email');
-  var messageInput = document.getElementById('message');
-  var senderKeyInput = document.getElementById('sender-key');
-  var statusBanner = document.getElementById('status-message');
-  var submitBtn = document.getElementById('submit-btn');
+document.addEventListener("DOMContentLoaded", function () {
+  var form = document.getElementById("contact-form");
+  var emailInput = document.getElementById("sender-email");
+  var messageInput = document.getElementById("message");
+  var senderKeyInput = document.getElementById("sender-key");
+  var statusBanner = document.getElementById("status-message");
+  var submitBtn = document.getElementById("submit-btn");
 
-  var lastCheckedEmailRef = { current: '' };
+  var lastCheckedEmailRef = { current: "" };
 
-  senderKeyInput.addEventListener('input', function () {
+  senderKeyInput.addEventListener("input", function () {
     if (senderKeyInput.readOnly) return;
     lockKeyField(senderKeyInput);
   });
 
-  emailInput.addEventListener('blur', function () {
-    lookupPGPKey(emailInput.value.trim(), senderKeyInput, statusBanner, lastCheckedEmailRef);
+  emailInput.addEventListener("blur", function () {
+    lookupPGPKey(
+      emailInput.value.trim(),
+      senderKeyInput,
+      statusBanner,
+      lastCheckedEmailRef,
+    );
   });
 
-  form.addEventListener('submit', async function (e) {
+  form.addEventListener("submit", async function (e) {
     e.preventDefault();
     clearStatus(statusBanner);
     var email = emailInput.value.trim();
     var message = messageInput.value.trim();
     var senderKey = senderKeyInput.value.trim();
     if (!email || !message) {
-      showStatus(statusBanner, 'Email and message required', 'error');
+      showStatus(statusBanner, "Email and message required", "error");
       return;
     }
     submitBtn.disabled = true;
-    showStatus(statusBanner, 'Encrypting and sending\u2026', 'info');
+    showStatus(statusBanner, "Encrypting and sending\u2026", "info");
     try {
-      var response = await fetch('/api/send-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email, message: message, senderPublicKey: senderKey })
+      var response = await fetch("/api/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: email,
+          message: message,
+          senderPublicKey: senderKey,
+        }),
       });
       var data = await response.json();
       if (response.ok && data.success) {
-        showStatus(statusBanner, 'Message sent encrypted', 'success');
         form.reset();
-        lastCheckedEmailRef.current = '';
+        lastCheckedEmailRef.current = "";
+        showStatus(statusBanner, "Message sent encrypted", "success");
       } else {
-        showStatus(statusBanner, data.error || 'Failed to send', 'error');
+        showStatus(statusBanner, data.error || "Failed to send", "error");
       }
     } catch (err) {
-      showStatus(statusBanner, 'Network error', 'error');
+      showStatus(statusBanner, "Network error", "error");
     } finally {
       submitBtn.disabled = false;
     }
   });
 
-  form.addEventListener('reset', function () {
+  form.addEventListener("reset", function () {
     clearStatus(statusBanner);
     unlockKeyField(senderKeyInput);
-    lastCheckedEmailRef.current = '';
+    lastCheckedEmailRef.current = "";
   });
-
 });
 
-export { lookupPGPKey, fetchFromKeysOpenPGP, fetchFromProtonMail, lockKeyField, unlockKeyField, showStatus, clearStatus, EMAIL_REGEX };
+export {
+  lookupPGPKey,
+  fetchFromKeysOpenPGP,
+  fetchFromProtonMail,
+  lockKeyField,
+  unlockKeyField,
+  showStatus,
+  clearStatus,
+  EMAIL_REGEX,
+};
 
-// This file is part of joel.benway.me.
+// This file is part of encrypted-email-form.
 //
-// joel.benway.me is free software: you can redistribute it and/or modify it
+// encrypted-email-form is free software: you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation, either version 3 of the License, or (at your option) any
 // later version.
 //
-// joel.benway.me is distributed in the hope that it will be useful, but WITHOUT
+// encrypted-email-form is distributed in the hope that it will be useful, but WITHOUT
 // ANY WARRANTY; without even the implied warranty of MERCHANTABILITY OR FITNESS
 // FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
 // details.
 //
 // You should have received a copy of the GNU General Public License along with
-// joel.benway.me. If not, see <https://www.gnu.org/licenses/>.
+// encrypted-email-form. If not, see <https://www.gnu.org/licenses/>.
