@@ -12,7 +12,8 @@ import {
   showStatus,
   clearStatus,
   EMAIL_REGEX,
-} from "../public/app.js";
+  isCompletePgpKey,
+} from "../public/shared/index.js";
 import "./setup.js";
 
 const PGP_KEY = `-----BEGIN PGP PUBLIC KEY BLOCK-----
@@ -434,6 +435,32 @@ describe("PGP Key Lookup Functions", () => {
       expect(EMAIL_REGEX.test("missing@domain")).toBe(false);
       expect(EMAIL_REGEX.test("@nodomain.com")).toBe(false);
       expect(EMAIL_REGEX.test("nodomain@")).toBe(false);
+    });
+  });
+
+  describe("isCompletePgpKey", () => {
+    it("returns true for complete PGP key with BEGIN and END markers", () => {
+      expect(isCompletePgpKey(PGP_KEY)).toBe(true);
+    });
+
+    it("returns false for key missing END marker", () => {
+      expect(isCompletePgpKey(PGP_KEY_NO_END)).toBe(false);
+    });
+
+    it("returns false for key missing BEGIN marker", () => {
+      expect(isCompletePgpKey("Version: test\ntest-key-data\n-----END PGP PUBLIC KEY BLOCK-----")).toBe(false);
+    });
+
+    it("returns false for empty string", () => {
+      expect(isCompletePgpKey("")).toBe(false);
+    });
+
+    it("returns false for non-key content", () => {
+      expect(isCompletePgpKey("not a key")).toBe(false);
+    });
+
+    it("handles whitespace around key", () => {
+      expect(isCompletePgpKey(`  \n${PGP_KEY}\n  `)).toBe(true);
     });
   });
 });

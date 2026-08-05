@@ -2,32 +2,25 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Please see end of file for extended copyright information
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const FETCH_TIMEOUT_MS = 5000;
-const PGP_BEGIN = "-----BEGIN PGP PUBLIC KEY BLOCK-----";
-const PGP_END = "-----END PGP PUBLIC KEY BLOCK-----";
-
-function isCompletePgpKey(key) {
-  const trimmed = key.trim();
-  return trimmed.startsWith(PGP_BEGIN) && trimmed.includes(PGP_END);
-}
+import {
+  EMAIL_REGEX,
+  FETCH_TIMEOUT_MS,
+  isCompletePgpKey,
+} from "./shared/index.js";
 
 async function fetchFromKeysOpenPGP(email) {
-  var controller = new AbortController();
-  var timeout = setTimeout(function () {
-    controller.abort();
-  }, FETCH_TIMEOUT_MS);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
   try {
-    var response = await fetch(
-      "https://keys.openpgp.org/vks/v1/by-email/" + encodeURIComponent(email),
-      {
-        signal: controller.signal,
-      },
+    const response = await fetch(
+      `https://keys.openpgp.org/vks/v1/by-email/${encodeURIComponent(email)}`,
+      { signal: controller.signal },
     );
     if (response.ok) {
       return await response.text();
     }
   } catch (err) {
+    console.debug("keys.openpgp.org lookup failed:", err);
   } finally {
     clearTimeout(timeout);
   }
@@ -35,22 +28,18 @@ async function fetchFromKeysOpenPGP(email) {
 }
 
 async function fetchFromProtonMail(email) {
-  var controller = new AbortController();
-  var timeout = setTimeout(function () {
-    controller.abort();
-  }, FETCH_TIMEOUT_MS);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
   try {
-    var response = await fetch(
-      "https://api.protonmail.ch/pks/lookup?op=get&search=" +
-        encodeURIComponent(email),
-      {
-        signal: controller.signal,
-      },
+    const response = await fetch(
+      `https://api.protonmail.ch/pks/lookup?op=get&search=${encodeURIComponent(email)}`,
+      { signal: controller.signal },
     );
     if (response.ok) {
       return await response.text();
     }
   } catch (err) {
+    console.debug("ProtonMail lookup failed:", err);
   } finally {
     clearTimeout(timeout);
   }
@@ -71,7 +60,7 @@ function unlockKeyField(senderKeyInput) {
 
 function showStatus(statusBanner, text, type) {
   statusBanner.textContent = text;
-  statusBanner.className = "status " + type;
+  statusBanner.className = `status ${type}`;
 }
 
 function clearStatus(statusBanner) {
@@ -92,17 +81,21 @@ async function lookupPGPKey(
   )
     return;
   if (isCompletePgpKey(senderKeyInput.value)) return;
-  var initialKeyValue = senderKeyInput.value;
+
+  const initialKeyValue = senderKeyInput.value;
   lastCheckedEmailRef.current = email;
-  showStatus(statusBanner, "Looking up key\u2026", "info");
-  var keyText = await fetchFromKeysOpenPGP(email);
+  showStatus(statusBanner, "Looking up key…", "info");
+
+  let keyText = await fetchFromKeysOpenPGP(email);
   if (email !== lastCheckedEmailRef.current) return;
   if (senderKeyInput.value !== initialKeyValue) return;
+
   if (!isCompletePgpKey(keyText)) {
     keyText = await fetchFromProtonMail(email);
   }
   if (email !== lastCheckedEmailRef.current) return;
   if (senderKeyInput.value !== initialKeyValue) return;
+
   if (isCompletePgpKey(keyText)) {
     senderKeyInput.value = keyText;
     lockKeyField(senderKeyInput);
@@ -112,22 +105,22 @@ async function lookupPGPKey(
   }
 }
 
-document.addEventListener("DOMContentLoaded", function () {
-  var form = document.getElementById("contact-form");
-  var emailInput = document.getElementById("sender-email");
-  var messageInput = document.getElementById("message");
-  var senderKeyInput = document.getElementById("sender-key");
-  var statusBanner = document.getElementById("status-message");
-  var submitBtn = document.getElementById("submit-btn");
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.getElementById("contact-form");
+  const emailInput = document.getElementById("sender-email");
+  const messageInput = document.getElementById("message");
+  const senderKeyInput = document.getElementById("sender-key");
+  const statusBanner = document.getElementById("status-message");
+  const submitBtn = document.getElementById("submit-btn");
 
-  var lastCheckedEmailRef = { current: "" };
+  const lastCheckedEmailRef = { current: "" };
 
-  senderKeyInput.addEventListener("input", function () {
+  senderKeyInput.addEventListener("input", () => {
     if (senderKeyInput.readOnly) return;
     lockKeyField(senderKeyInput);
   });
 
-  emailInput.addEventListener("blur", function () {
+  emailInput.addEventListener("blur", () => {
     lookupPGPKey(
       emailInput.value.trim(),
       senderKeyInput,
@@ -136,29 +129,35 @@ document.addEventListener("DOMContentLoaded", function () {
     );
   });
 
-  form.addEventListener("submit", async function (e) {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
     clearStatus(statusBanner);
-    var email = emailInput.value.trim();
-    var message = messageInput.value.trim();
-    var senderKey = senderKeyInput.value.trim();
+
+    const email = emailInput.value.trim();
+    const message = messageInput.value.trim();
+    const senderKey = senderKeyInput.value.trim();
+
     if (!email || !message) {
       showStatus(statusBanner, "Email and message required", "error");
       return;
     }
+
     submitBtn.disabled = true;
-    showStatus(statusBanner, "Encrypting and sending\u2026", "info");
+    showStatus(statusBanner, "Encrypting and sending…", "info");
+
     try {
-      var response = await fetch("/api/send-email", {
+      const response = await fetch("/api/send-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: email,
-          message: message,
+          email,
+          message,
           senderPublicKey: senderKey,
         }),
       });
-      var data = await response.json();
+
+      const data = await response.json();
+
       if (response.ok && data.success) {
         form.reset();
         lastCheckedEmailRef.current = "";
@@ -167,13 +166,14 @@ document.addEventListener("DOMContentLoaded", function () {
         showStatus(statusBanner, data.error || "Failed to send", "error");
       }
     } catch (err) {
+      console.error("Send failed:", err);
       showStatus(statusBanner, "Network error", "error");
     } finally {
       submitBtn.disabled = false;
     }
   });
 
-  form.addEventListener("reset", function () {
+  form.addEventListener("reset", () => {
     clearStatus(statusBanner);
     unlockKeyField(senderKeyInput);
     lastCheckedEmailRef.current = "";

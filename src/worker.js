@@ -3,21 +3,12 @@
 // Please see end of file for extended copyright information
 
 import * as openpgp from "openpgp";
-
-const MAX_MESSAGE_LENGTH = 50000;
-const MAX_KEY_LENGTH = 20000;
-const MAX_REQUESTS_PER_HOUR = 5;
-const RATE_WINDOW_MS = 60 * 60 * 1000;
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PGP_BEGIN = "-----BEGIN PGP PUBLIC KEY BLOCK-----";
-const PGP_END = "-----END PGP PUBLIC KEY BLOCK-----";
-
-function isCompletePgpKey(key) {
-  const trimmed = key.trim();
-  return trimmed.startsWith(PGP_BEGIN) && trimmed.includes(PGP_END);
-}
-
-const requestTimestamps = new Map();
+import {
+  MAX_MESSAGE_LENGTH,
+  MAX_KEY_LENGTH,
+  EMAIL_REGEX,
+  isCompletePgpKey,
+} from "./shared/index.js";
 
 function jsonResponse(body, status) {
   return new Response(JSON.stringify(body), {
@@ -26,18 +17,51 @@ function jsonResponse(body, status) {
   });
 }
 
-function isRateLimited(ip) {
-  const now = Date.now();
-  const recent = (requestTimestamps.get(ip) || []).filter(
-    (t) => now - t < RATE_WINDOW_MS,
-  );
-  if (recent.length >= MAX_REQUESTS_PER_HOUR) {
-    requestTimestamps.set(ip, recent);
-    return true;
+export class RateLimiter {
+  constructor(state, env) {
+    this.state = state;
   }
-  recent.push(now);
-  requestTimestamps.set(ip, recent);
-  return false;
+
+  async fetch(request) {
+    const url = new URL(request.url);
+    const ip = url.searchParams.get("ip");
+    if (!ip) {
+      return new Response("Missing ip parameter", { status: 400 });
+    }
+
+    const now = Date.now();
+    const windowStart = now - 60 * 60 * 1000;
+
+    let timestamps = (await this.state.storage.get("timestamps")) || {};
+    const ipTimestamps = (timestamps[ip] || []).filter((t) => t > windowStart);
+
+    if (ipTimestamps.length >= 5) {
+      return new Response(JSON.stringify({ limited: true, remaining: 0 }), {
+        status: 429,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    ipTimestamps.push(now);
+    timestamps[ip] = ipTimestamps;
+
+    // Clean up old IPs to prevent unbounded growth
+    for (const [key, times] of Object.entries(timestamps)) {
+      const recent = times.filter((t) => t > windowStart);
+      if (recent.length === 0) {
+        delete timestamps[key];
+      } else {
+        timestamps[key] = recent;
+      }
+    }
+
+    await this.state.storage.put("timestamps", timestamps);
+
+    return new Response(JSON.stringify({ limited: false, remaining: 5 - ipTimestamps.length }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
 }
 
 export default {
@@ -53,7 +77,12 @@ export default {
     }
 
     const clientIp = request.headers.get("CF-Connecting-IP") || "unknown";
-    if (isRateLimited(clientIp)) {
+    const rateLimiterId = env.RATE_LIMITER.idFromName("global");
+    const rateLimiter = env.RATE_LIMITER.get(rateLimiterId);
+    const rateLimitResponse = await rateLimiter.fetch(`https://internal/rate-limit?ip=${encodeURIComponent(clientIp)}`);
+    const rateLimitData = await rateLimitResponse.json();
+
+    if (rateLimitData.limited) {
       return jsonResponse(
         { error: "Too many requests, please try again later" },
         429,
