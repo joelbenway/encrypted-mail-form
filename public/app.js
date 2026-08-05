@@ -92,14 +92,17 @@ async function lookupPGPKey(
   )
     return;
   if (isCompletePgpKey(senderKeyInput.value)) return;
+  var initialKeyValue = senderKeyInput.value;
   lastCheckedEmailRef.current = email;
   showStatus(statusBanner, "Looking up key\u2026", "info");
   var keyText = await fetchFromKeysOpenPGP(email);
   if (email !== lastCheckedEmailRef.current) return;
+  if (senderKeyInput.value !== initialKeyValue) return;
   if (!isCompletePgpKey(keyText)) {
     keyText = await fetchFromProtonMail(email);
   }
   if (email !== lastCheckedEmailRef.current) return;
+  if (senderKeyInput.value !== initialKeyValue) return;
   if (isCompletePgpKey(keyText)) {
     senderKeyInput.value = keyText;
     lockKeyField(senderKeyInput);
