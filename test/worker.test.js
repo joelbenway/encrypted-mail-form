@@ -96,6 +96,20 @@ describe("request validation", () => {
     expect(response.status).toBe(400);
   });
 
+  it("rejects a null JSON body with 400", async () => {
+    const response = await sendRequest("/api/send-email", {
+      body: null,
+    });
+    expect(response.status).toBe(400);
+  });
+
+  it("rejects a non-object JSON body with 400", async () => {
+    const response = await sendRequest("/api/send-email", {
+      body: "just a string",
+    });
+    expect(response.status).toBe(400);
+  });
+
   it("rejects a request with missing fields", async () => {
     const response = await sendRequest("/api/send-email", {
       body: { email: SENDER_EMAIL },
