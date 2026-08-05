@@ -21,12 +21,23 @@ Version: test
 test-key-data
 -----END PGP PUBLIC KEY BLOCK-----`;
 
+const PGP_KEY_NO_END = `-----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: test
+
+test-key-data`;
+
 function createMockResponse(body, ok = true, status = 200) {
   return {
     ok,
     status,
     text: vi.fn().mockResolvedValue(body),
   };
+}
+
+function createAbortError() {
+  const error = new Error("Aborted");
+  error.name = "AbortError";
+  return error;
 }
 
 function getElements() {
@@ -42,6 +53,7 @@ function resetInputs() {
   const statusBanner = document.getElementById("status-message");
   keyInput.value = "";
   keyInput.readOnly = false;
+  keyInput.classList.remove("key-locked");
   statusBanner.textContent = "";
   statusBanner.className = "status hidden";
 }
@@ -86,21 +98,21 @@ describe("PGP Key Lookup Functions", () => {
       expect(key).toBe("");
     });
 
-    it("times out after 5 seconds", async () => {
+    it("times out after 5 seconds and aborts the request", async () => {
       vi.useFakeTimers();
-      let fetchResolve;
-      const fetchPromise = new Promise((resolve) => {
-        fetchResolve = resolve;
-      });
-      global.fetch.mockReturnValueOnce(fetchPromise);
+      const abortError = createAbortError();
+      global.fetch.mockRejectedValueOnce(abortError);
 
       const keyPromise = fetchFromKeysOpenPGP("timeout@example.com");
       await vi.advanceTimersByTimeAsync(5000);
-      fetchResolve(createMockResponse(""));
       const key = await keyPromise;
 
       vi.useRealTimers();
       expect(key).toBe("");
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({ signal: expect.any(AbortSignal) }),
+      );
     });
   });
 
@@ -287,14 +299,25 @@ describe("PGP Key Lookup Functions", () => {
       expect(global.fetch).not.toHaveBeenCalled();
     });
 
-    it("times out on first source and tries fallback", async () => {
+    it("does NOT skip lookup if incomplete key manually entered (missing END marker)", async () => {
+      senderKeyInput.value = PGP_KEY_NO_END;
+
+      await lookupPGPKey(
+        "manual@example.com",
+        senderKeyInput,
+        statusBanner,
+        lastCheckedEmailRef,
+      );
+
+      // Incomplete key should NOT skip lookup - should attempt to fetch
+      expect(global.fetch).toHaveBeenCalledTimes(2);
+    });
+
+    it("times out on first source, aborts request, and tries fallback", async () => {
       vi.useFakeTimers();
-      let fetchResolve;
-      const firstFetchPromise = new Promise((resolve) => {
-        fetchResolve = resolve;
-      });
+      const abortError = createAbortError();
       global.fetch
-        .mockReturnValueOnce(firstFetchPromise)
+        .mockRejectedValueOnce(abortError)
         .mockResolvedValueOnce(createMockResponse(PGP_KEY));
 
       const keyPromise = lookupPGPKey(
@@ -304,7 +327,6 @@ describe("PGP Key Lookup Functions", () => {
         lastCheckedEmailRef,
       );
       await vi.advanceTimersByTimeAsync(5000);
-      fetchResolve(createMockResponse(""));
       await keyPromise;
 
       vi.useRealTimers();
@@ -322,18 +344,25 @@ describe("PGP Key Lookup Functions", () => {
       senderKeyInput.readOnly = false;
     });
 
-    it("locks field when value starts with PGP header", () => {
+    it("locks field when value is complete PGP key", () => {
       senderKeyInput.value = PGP_KEY;
       lockKeyField(senderKeyInput);
       expect(senderKeyInput.readOnly).toBe(true);
-      expect(senderKeyInput.classList.add).toHaveBeenCalledWith("key-locked");
+      expect(senderKeyInput.classList.contains("key-locked")).toBe(true);
     });
 
     it("does not lock field for non-PGP content", () => {
       senderKeyInput.value = "not a key";
       lockKeyField(senderKeyInput);
       expect(senderKeyInput.readOnly).toBe(false);
-      expect(senderKeyInput.classList.add).not.toHaveBeenCalled();
+      expect(senderKeyInput.classList.contains("key-locked")).toBe(false);
+    });
+
+    it("does not lock field for incomplete PGP key (missing END marker)", () => {
+      senderKeyInput.value = PGP_KEY_NO_END;
+      lockKeyField(senderKeyInput);
+      expect(senderKeyInput.readOnly).toBe(false);
+      expect(senderKeyInput.classList.contains("key-locked")).toBe(false);
     });
   });
 
@@ -350,15 +379,11 @@ describe("PGP Key Lookup Functions", () => {
       senderKeyInput.value = PGP_KEY;
       senderKeyInput.readOnly = true;
       senderKeyInput.classList.add("key-locked");
-      senderKeyInput.classList.add = vi.fn();
-      senderKeyInput.classList.remove = vi.fn();
 
       unlockKeyField(senderKeyInput);
 
       expect(senderKeyInput.readOnly).toBe(false);
-      expect(senderKeyInput.classList.remove).toHaveBeenCalledWith(
-        "key-locked",
-      );
+      expect(senderKeyInput.classList.contains("key-locked")).toBe(false);
     });
   });
 

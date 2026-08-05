@@ -6,27 +6,7 @@ import { vi } from "vitest";
 
 global.fetch = vi.fn();
 
-function createMockClassList() {
-  const classes = new Set();
-  return {
-    add: vi.fn((className) => classes.add(className)),
-    remove: vi.fn((className) => classes.delete(className)),
-    contains: vi.fn((className) => classes.has(className)),
-    toggle: vi.fn((className) => {
-      if (classes.has(className)) {
-        classes.delete(className);
-        return false;
-      }
-      classes.add(className);
-      return true;
-    }),
-    _classes: classes,
-  };
-}
-
 function setupDOM() {
-  const mockClassList = createMockClassList();
-
   document.body.innerHTML = `
     <form id="contact-form">
       <input id="sender-email" type="email" />
@@ -37,24 +17,10 @@ function setupDOM() {
     </form>
   `;
 
-  // Replace classList on relevant elements
+  // Use native form reset behavior
+  const form = document.getElementById("contact-form");
   const keyInput = document.getElementById("sender-key");
   const statusBanner = document.getElementById("status-message");
-  const form = document.getElementById("contact-form");
-
-  Object.defineProperty(keyInput, "classList", {
-    value: mockClassList,
-    writable: true,
-    configurable: true,
-  });
-
-  Object.defineProperty(statusBanner, "classList", {
-    value: mockClassList,
-    writable: true,
-    configurable: true,
-  });
-
-  // Use native form reset behavior
   const originalReset = form.reset.bind(form);
   form.reset = vi.fn(() => {
     originalReset();
