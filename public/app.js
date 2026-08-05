@@ -106,6 +106,10 @@ document.addEventListener('DOMContentLoaded', () => {
     lockKeyField(senderKeyInput);
   });
 
+  emailInput.addEventListener('input', () => {
+    lastCheckedEmailRef.current = emailInput.value.trim();
+  });
+
   emailInput.addEventListener('blur', () => {
     lookupPGPKey(emailInput.value.trim(), senderKeyInput, statusBanner, lastCheckedEmailRef);
   });
