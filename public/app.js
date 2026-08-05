@@ -28,7 +28,7 @@ async function fetchFromProtonMail(email) {
   const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
   try {
     const response = await fetch(
-      `https://api.protonmail.ch/pks/lookup?op=get&search=${encodeURIComponent(email)}`,
+      `https://mail-api.proton.me/pks/lookup?op=get&search=${encodeURIComponent(email)}`,
       { signal: controller.signal }
     );
     if (response.ok) {

@@ -123,7 +123,7 @@ describe('PGP Key Lookup Functions', () => {
       const key = await fetchFromProtonMail('user@protonmail.com');
       expect(key).toBe(PGP_KEY);
       expect(global.fetch).toHaveBeenCalledWith(
-        'https://api.protonmail.ch/pks/lookup?op=get&search=user%40protonmail.com',
+        'https://mail-api.proton.me/pks/lookup?op=get&search=user%40protonmail.com',
         expect.objectContaining({ signal: expect.any(AbortSignal) })
       );
     });
@@ -187,7 +187,7 @@ describe('PGP Key Lookup Functions', () => {
       );
       expect(global.fetch).toHaveBeenNthCalledWith(
         2,
-        'https://api.protonmail.ch/pks/lookup?op=get&search=user%40custom-domain.com',
+        'https://mail-api.proton.me/pks/lookup?op=get&search=user%40custom-domain.com',
         expect.any(Object)
       );
       expect(senderKeyInput.value).toBe(PGP_KEY);
