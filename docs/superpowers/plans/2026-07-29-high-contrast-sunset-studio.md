@@ -143,7 +143,7 @@
 
 Run this grep to confirm all IDs `app.js` depends on exist in the new HTML:
 
-```
+```bash
 rg -c "contact-form|sender-email|message|sender-key|status-message|submit-btn" public/index.html
 ```
 
@@ -153,7 +153,7 @@ Expected: matches on all six IDs.
 
 ```bash
 git add public/index.html
-git commit -m " redesign: full-width header, wide form, sunset footer markup"
+git commit -m "redesign: full-width header, wide form, sunset footer markup"
 ```
 
 ---
@@ -539,7 +539,7 @@ textarea {
 
 Run:
 
-```
+```bash
 rg -c "rule-top|rule-orange|role-links|font-serif" public/style.css
 ```
 
@@ -569,7 +569,7 @@ git commit -m "style: high-contrast sunset studio theme with 3D retro pop"
 
 Run:
 
-```
+```bash
 rg "getElementById" public/app.js
 ```
 
@@ -579,7 +579,7 @@ Expected output references: `contact-form`, `sender-email`, `message`, `sender-k
 
 Run:
 
-```
+```bash
 rg "key-locked" public/app.js public/style.css public/index.html
 ```
 
@@ -589,7 +589,7 @@ Expected: `app.js` adds/removes the class, `style.css` defines the visual state.
 
 Run:
 
-```
+```bash
 npx wrangler dev
 ```
 
