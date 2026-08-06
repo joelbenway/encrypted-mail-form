@@ -107,7 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   emailInput.addEventListener('input', () => {
-    lastCheckedEmailRef.current = emailInput.value.trim();
+    lastCheckedEmailRef.current = '';
   });
 
   emailInput.addEventListener('blur', () => {
