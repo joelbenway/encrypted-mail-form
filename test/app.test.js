@@ -150,7 +150,6 @@ describe('PGP Key Lookup Functions', () => {
       senderKeyInput = elements.senderKeyInput;
       statusBanner = elements.statusBanner;
       lastCheckedEmailRef = elements.lastCheckedEmailRef;
-      const keyAutoPopulatedRef = elements.keyAutoPopulatedRef;
       senderKeyInput.value = '';
       senderKeyInput.readOnly = false;
     });
@@ -372,6 +371,9 @@ describe('PGP Key Lookup Functions', () => {
     });
 
     it('preserves manually entered keys and clears only auto-populated keys on email change', async () => {
+      // Initialize the app's event listeners (DOMContentLoaded)
+      document.dispatchEvent(new Event('DOMContentLoaded'));
+
       // Test auto-populated key behavior
       global.fetch.mockResolvedValueOnce(createMockResponse(PGP_KEY));
       const keyAutoPopulatedRef = { current: false };
@@ -388,35 +390,22 @@ describe('PGP Key Lookup Functions', () => {
       expect(senderKeyInput.value).toBe(PGP_KEY);
       expect(keyAutoPopulatedRef.current).toBe(true);
 
-      // Simulate email change - should clear auto-populated key
+      // Simulate email change via actual event listener - should clear auto-populated key
       const emailInput = document.getElementById('sender-email');
       emailInput.value = 'new@example.com';
-
-      // Simulate the email input handler logic
-      if (keyAutoPopulatedRef.current) {
-        senderKeyInput.value = '';
-        unlockKeyField(senderKeyInput);
-        keyAutoPopulatedRef.current = false;
-      }
-      lastCheckedEmailRef.current = '';
+      emailInput.dispatchEvent(new Event('input', { bubbles: true }));
 
       expect(senderKeyInput.value).toBe('');
+      expect(senderKeyInput.readOnly).toBe(false);
       expect(keyAutoPopulatedRef.current).toBe(false);
 
       // Test manual key entry preservation
       senderKeyInput.value = PGP_KEY;
       keyAutoPopulatedRef.current = false; // Manually entered
 
-      // Simulate email change - should NOT clear manually entered key
+      // Simulate email change via actual event listener - should NOT clear manually entered key
       emailInput.value = 'another@example.com';
-
-      // Simulate the email input handler logic
-      if (keyAutoPopulatedRef.current) {
-        senderKeyInput.value = '';
-        unlockKeyField(senderKeyInput);
-        keyAutoPopulatedRef.current = false;
-      }
-      lastCheckedEmailRef.current = '';
+      emailInput.dispatchEvent(new Event('input', { bubbles: true }));
 
       expect(senderKeyInput.value).toBe(PGP_KEY);
       expect(keyAutoPopulatedRef.current).toBe(false);
