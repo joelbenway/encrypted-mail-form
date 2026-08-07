@@ -64,7 +64,13 @@ function clearStatus(statusBanner) {
   statusBanner.className = 'status hidden';
 }
 
-async function lookupPGPKey(email, senderKeyInput, statusBanner, lastCheckedEmailRef) {
+async function lookupPGPKey(
+  email,
+  senderKeyInput,
+  statusBanner,
+  lastCheckedEmailRef,
+  keyAutoPopulatedRef
+) {
   if (!email || !EMAIL_REGEX.test(email) || email === lastCheckedEmailRef.current) return;
   if (isCompletePgpKey(senderKeyInput.value)) return;
 
@@ -85,6 +91,7 @@ async function lookupPGPKey(email, senderKeyInput, statusBanner, lastCheckedEmai
   if (isCompletePgpKey(keyText)) {
     senderKeyInput.value = keyText;
     lockKeyField(senderKeyInput);
+    keyAutoPopulatedRef.current = true;
     showStatus(statusBanner, 'Key found and attached', 'success');
   } else {
     clearStatus(statusBanner);
@@ -100,18 +107,32 @@ document.addEventListener('DOMContentLoaded', () => {
   const submitBtn = document.getElementById('submit-btn');
 
   const lastCheckedEmailRef = { current: '' };
+  const keyAutoPopulatedRef = { current: false };
 
   senderKeyInput.addEventListener('input', () => {
     if (senderKeyInput.readOnly) return;
     lockKeyField(senderKeyInput);
+    keyAutoPopulatedRef.current = false;
+    lastCheckedEmailRef.current = '';
   });
 
   emailInput.addEventListener('input', () => {
+    if (keyAutoPopulatedRef.current) {
+      senderKeyInput.value = '';
+      unlockKeyField(senderKeyInput);
+      keyAutoPopulatedRef.current = false;
+    }
     lastCheckedEmailRef.current = '';
   });
 
   emailInput.addEventListener('blur', () => {
-    lookupPGPKey(emailInput.value.trim(), senderKeyInput, statusBanner, lastCheckedEmailRef);
+    lookupPGPKey(
+      emailInput.value.trim(),
+      senderKeyInput,
+      statusBanner,
+      lastCheckedEmailRef,
+      keyAutoPopulatedRef
+    );
   });
 
   form.addEventListener('submit', async e => {
@@ -146,6 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (response.ok && data.success) {
         form.reset();
         lastCheckedEmailRef.current = '';
+        keyAutoPopulatedRef.current = false;
         showStatus(statusBanner, 'Message sent encrypted', 'success');
       } else {
         showStatus(statusBanner, data.error || 'Failed to send', 'error');
@@ -162,6 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
     clearStatus(statusBanner);
     unlockKeyField(senderKeyInput);
     lastCheckedEmailRef.current = '';
+    keyAutoPopulatedRef.current = false;
   });
 });
 
