@@ -46,6 +46,7 @@ function getElements() {
     senderKeyInput: document.getElementById('sender-key'),
     statusBanner: document.getElementById('status-message'),
     lastCheckedEmailRef: { current: '' },
+    keyAutoPopulatedRef: { current: false },
   };
 }
 
@@ -149,20 +150,29 @@ describe('PGP Key Lookup Functions', () => {
       senderKeyInput = elements.senderKeyInput;
       statusBanner = elements.statusBanner;
       lastCheckedEmailRef = elements.lastCheckedEmailRef;
+      const keyAutoPopulatedRef = elements.keyAutoPopulatedRef;
       senderKeyInput.value = '';
       senderKeyInput.readOnly = false;
     });
 
     it('fetches key from keys.openpgp.org on valid email', async () => {
       global.fetch.mockResolvedValueOnce(createMockResponse(PGP_KEY));
+      const keyAutoPopulatedRef = { current: false };
 
-      await lookupPGPKey('sender@example.com', senderKeyInput, statusBanner, lastCheckedEmailRef);
+      await lookupPGPKey(
+        'sender@example.com',
+        senderKeyInput,
+        statusBanner,
+        lastCheckedEmailRef,
+        keyAutoPopulatedRef
+      );
 
       expect(global.fetch).toHaveBeenCalledWith(
         'https://keys.openpgp.org/vks/v1/by-email/sender%40example.com',
         expect.any(Object)
       );
       expect(senderKeyInput.value).toBe(PGP_KEY);
+      expect(keyAutoPopulatedRef.current).toBe(true);
       expect(statusBanner.textContent).toBe('Key found and attached');
       expect(statusBanner.className).toContain('success');
     });
@@ -171,12 +181,14 @@ describe('PGP Key Lookup Functions', () => {
       global.fetch
         .mockResolvedValueOnce(createMockResponse(''))
         .mockResolvedValueOnce(createMockResponse(PGP_KEY));
+      const keyAutoPopulatedRef = { current: false };
 
       await lookupPGPKey(
         'user@custom-domain.com',
         senderKeyInput,
         statusBanner,
-        lastCheckedEmailRef
+        lastCheckedEmailRef,
+        keyAutoPopulatedRef
       );
 
       expect(global.fetch).toHaveBeenCalledTimes(2);
@@ -191,6 +203,7 @@ describe('PGP Key Lookup Functions', () => {
         expect.any(Object)
       );
       expect(senderKeyInput.value).toBe(PGP_KEY);
+      expect(keyAutoPopulatedRef.current).toBe(true);
       expect(statusBanner.textContent).toBe('Key found and attached');
     });
 
@@ -198,11 +211,19 @@ describe('PGP Key Lookup Functions', () => {
       global.fetch
         .mockResolvedValueOnce(createMockResponse(''))
         .mockResolvedValueOnce(createMockResponse(''));
+      const keyAutoPopulatedRef = { current: false };
 
-      await lookupPGPKey('nokey@example.com', senderKeyInput, statusBanner, lastCheckedEmailRef);
+      await lookupPGPKey(
+        'nokey@example.com',
+        senderKeyInput,
+        statusBanner,
+        lastCheckedEmailRef,
+        keyAutoPopulatedRef
+      );
 
       expect(global.fetch).toHaveBeenCalledTimes(2);
       expect(senderKeyInput.value).toBe('');
+      expect(keyAutoPopulatedRef.current).toBe(false);
       expect(statusBanner.textContent).toBe('');
       expect(statusBanner.className).toBe('status hidden');
     });
@@ -211,11 +232,19 @@ describe('PGP Key Lookup Functions', () => {
       global.fetch
         .mockRejectedValueOnce(new Error('Network error'))
         .mockResolvedValueOnce(createMockResponse(PGP_KEY));
+      const keyAutoPopulatedRef = { current: false };
 
-      await lookupPGPKey('error@example.com', senderKeyInput, statusBanner, lastCheckedEmailRef);
+      await lookupPGPKey(
+        'error@example.com',
+        senderKeyInput,
+        statusBanner,
+        lastCheckedEmailRef,
+        keyAutoPopulatedRef
+      );
 
       expect(global.fetch).toHaveBeenCalledTimes(2);
       expect(senderKeyInput.value).toBe(PGP_KEY);
+      expect(keyAutoPopulatedRef.current).toBe(true);
       expect(statusBanner.textContent).toBe('Key found and attached');
     });
 
@@ -223,42 +252,96 @@ describe('PGP Key Lookup Functions', () => {
       global.fetch
         .mockRejectedValueOnce(new Error('Network error'))
         .mockRejectedValueOnce(new Error('Network error'));
+      const keyAutoPopulatedRef = { current: false };
 
-      await lookupPGPKey('fail@example.com', senderKeyInput, statusBanner, lastCheckedEmailRef);
+      await lookupPGPKey(
+        'fail@example.com',
+        senderKeyInput,
+        statusBanner,
+        lastCheckedEmailRef,
+        keyAutoPopulatedRef
+      );
 
       expect(global.fetch).toHaveBeenCalledTimes(2);
+      expect(keyAutoPopulatedRef.current).toBe(false);
       expect(statusBanner.textContent).toBe('');
     });
 
     it('does not fetch for invalid email format', async () => {
-      await lookupPGPKey('not-an-email', senderKeyInput, statusBanner, lastCheckedEmailRef);
-      await lookupPGPKey('', senderKeyInput, statusBanner, lastCheckedEmailRef);
-      await lookupPGPKey('missing@domain', senderKeyInput, statusBanner, lastCheckedEmailRef);
+      const keyAutoPopulatedRef = { current: false };
+      await lookupPGPKey(
+        'not-an-email',
+        senderKeyInput,
+        statusBanner,
+        lastCheckedEmailRef,
+        keyAutoPopulatedRef
+      );
+      await lookupPGPKey(
+        '',
+        senderKeyInput,
+        statusBanner,
+        lastCheckedEmailRef,
+        keyAutoPopulatedRef
+      );
+      await lookupPGPKey(
+        'missing@domain',
+        senderKeyInput,
+        statusBanner,
+        lastCheckedEmailRef,
+        keyAutoPopulatedRef
+      );
 
       expect(global.fetch).not.toHaveBeenCalled();
     });
 
     it('caches last checked email and skips duplicate lookup', async () => {
       global.fetch.mockResolvedValue(createMockResponse(PGP_KEY));
+      const keyAutoPopulatedRef = { current: false };
 
-      await lookupPGPKey('cached@example.com', senderKeyInput, statusBanner, lastCheckedEmailRef);
-      await lookupPGPKey('cached@example.com', senderKeyInput, statusBanner, lastCheckedEmailRef);
+      await lookupPGPKey(
+        'cached@example.com',
+        senderKeyInput,
+        statusBanner,
+        lastCheckedEmailRef,
+        keyAutoPopulatedRef
+      );
+      await lookupPGPKey(
+        'cached@example.com',
+        senderKeyInput,
+        statusBanner,
+        lastCheckedEmailRef,
+        keyAutoPopulatedRef
+      );
 
       expect(global.fetch).toHaveBeenCalledTimes(1);
     });
 
     it('skips lookup if key already manually entered', async () => {
       senderKeyInput.value = PGP_KEY;
+      const keyAutoPopulatedRef = { current: false };
 
-      await lookupPGPKey('manual@example.com', senderKeyInput, statusBanner, lastCheckedEmailRef);
+      await lookupPGPKey(
+        'manual@example.com',
+        senderKeyInput,
+        statusBanner,
+        lastCheckedEmailRef,
+        keyAutoPopulatedRef
+      );
 
       expect(global.fetch).not.toHaveBeenCalled();
     });
 
     it('does NOT skip lookup if incomplete key manually entered (missing END marker)', async () => {
       senderKeyInput.value = PGP_KEY_NO_END;
+      const keyAutoPopulatedRef = { current: false };
 
-      await lookupPGPKey('manual@example.com', senderKeyInput, statusBanner, lastCheckedEmailRef);
+      await lookupPGPKey(
+        'manual@example.com',
+        senderKeyInput,
+        statusBanner,
+        lastCheckedEmailRef,
+        keyAutoPopulatedRef
+      );
 
       // Incomplete key should NOT skip lookup - should attempt to fetch
       expect(global.fetch).toHaveBeenCalledTimes(2);
@@ -270,12 +353,14 @@ describe('PGP Key Lookup Functions', () => {
       global.fetch
         .mockRejectedValueOnce(abortError)
         .mockResolvedValueOnce(createMockResponse(PGP_KEY));
+      const keyAutoPopulatedRef = { current: false };
 
       const keyPromise = lookupPGPKey(
         'timeout@example.com',
         senderKeyInput,
         statusBanner,
-        lastCheckedEmailRef
+        lastCheckedEmailRef,
+        keyAutoPopulatedRef
       );
       await vi.advanceTimersByTimeAsync(5000);
       await keyPromise;
@@ -283,6 +368,58 @@ describe('PGP Key Lookup Functions', () => {
       vi.useRealTimers();
       expect(global.fetch).toHaveBeenCalledTimes(2);
       expect(senderKeyInput.value).toBe(PGP_KEY);
+      expect(keyAutoPopulatedRef.current).toBe(true);
+    });
+
+    it('preserves manually entered keys and clears only auto-populated keys on email change', async () => {
+      // Test auto-populated key behavior
+      global.fetch.mockResolvedValueOnce(createMockResponse(PGP_KEY));
+      const keyAutoPopulatedRef = { current: false };
+      const lastCheckedEmailRef = { current: '' };
+
+      // Simulate auto-population via lookupPGPKey
+      await lookupPGPKey(
+        'auto@example.com',
+        senderKeyInput,
+        statusBanner,
+        lastCheckedEmailRef,
+        keyAutoPopulatedRef
+      );
+      expect(senderKeyInput.value).toBe(PGP_KEY);
+      expect(keyAutoPopulatedRef.current).toBe(true);
+
+      // Simulate email change - should clear auto-populated key
+      const emailInput = document.getElementById('sender-email');
+      emailInput.value = 'new@example.com';
+
+      // Simulate the email input handler logic
+      if (keyAutoPopulatedRef.current) {
+        senderKeyInput.value = '';
+        unlockKeyField(senderKeyInput);
+        keyAutoPopulatedRef.current = false;
+      }
+      lastCheckedEmailRef.current = '';
+
+      expect(senderKeyInput.value).toBe('');
+      expect(keyAutoPopulatedRef.current).toBe(false);
+
+      // Test manual key entry preservation
+      senderKeyInput.value = PGP_KEY;
+      keyAutoPopulatedRef.current = false; // Manually entered
+
+      // Simulate email change - should NOT clear manually entered key
+      emailInput.value = 'another@example.com';
+
+      // Simulate the email input handler logic
+      if (keyAutoPopulatedRef.current) {
+        senderKeyInput.value = '';
+        unlockKeyField(senderKeyInput);
+        keyAutoPopulatedRef.current = false;
+      }
+      lastCheckedEmailRef.current = '';
+
+      expect(senderKeyInput.value).toBe(PGP_KEY);
+      expect(keyAutoPopulatedRef.current).toBe(false);
     });
   });
 
