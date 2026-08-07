@@ -7,25 +7,25 @@
    Keep :root intact; do not inline these values.
    =========================================== */
 :root {
-  --bg: #F6F4EE;
-  --text: #18181B;
-  --text-muted: #66635B;
-  --surface: #FFFFFF;
-  --border: #18181B;
-  --accent: #FA500F;
-  --accent-hover: #E04400;
-  --locked-bg: #EFECE6;
-  --locked-text: #66635B;
-  --locked-border: #B0AC9F;
+  --bg: #f6f4ee;
+  --text: #18181b;
+  --text-muted: #66635b;
+  --surface: #ffffff;
+  --border: #18181b;
+  --accent: #fa500f;
+  --accent-hover: #e04400;
+  --locked-bg: #efece6;
+  --locked-text: #66635b;
+  --locked-border: #b0ac9f;
   --focus-ring: rgba(250, 80, 15, 0.25);
   --success: #2a7a4a;
   --error: #d63;
 
-  --stripe-1: #FFD800;
-  --stripe-2: #FFAF00;
-  --stripe-3: #FF8205;
-  --stripe-4: #FA500F;
-  --stripe-5: #E10500;
+  --stripe-1: #ffd800;
+  --stripe-2: #ffaf00;
+  --stripe-3: #ff8205;
+  --stripe-4: #fa500f;
+  --stripe-5: #e10500;
 
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: 'SF Mono', 'JetBrains Mono', ui-monospace, monospace;
@@ -35,9 +35,17 @@
   --shadow-press: 2px 2px 0px var(--text);
 }
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
-html { height: 100%; }
+html {
+  height: 100%;
+}
 
 body {
   min-height: 100vh;
@@ -51,7 +59,10 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-a { color: inherit; text-decoration: none; }
+a {
+  color: inherit;
+  text-decoration: none;
+}
 
 /* === Header === */
 
@@ -80,7 +91,7 @@ a { color: inherit; text-decoration: none; }
   color: var(--text);
   line-height: 1;
   text-transform: uppercase;
-  text-shadow: 1px 1px 0px rgba(0,0,0,0.08);
+  text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.08);
 }
 
 .nav-links {
@@ -99,7 +110,9 @@ a { color: inherit; text-decoration: none; }
   padding: 8px 16px;
   border: 2px solid var(--text);
   box-shadow: 3px 3px 0px var(--text);
-  transition: transform 120ms ease, box-shadow 120ms ease;
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease;
 }
 
 .pill:hover {
@@ -156,7 +169,8 @@ label {
   color: var(--text-muted);
 }
 
-input, textarea {
+input,
+textarea {
   display: block;
   width: 100%;
   border: 2.5px solid var(--border);
@@ -168,14 +182,18 @@ input, textarea {
   padding: 12px 14px;
   outline: none;
   box-shadow: var(--shadow-hard);
-  transition: box-shadow 150ms ease, border-color 150ms ease;
+  transition:
+    box-shadow 150ms ease,
+    border-color 150ms ease;
 }
 
-input::placeholder, textarea::placeholder {
+input::placeholder,
+textarea::placeholder {
   color: var(--text-muted);
 }
 
-input:focus, textarea:focus {
+input:focus,
+textarea:focus {
   border-color: var(--accent);
   box-shadow: var(--shadow-hard-accent);
 }
@@ -204,9 +222,15 @@ textarea {
   transition: color 200ms;
 }
 
-.status.success { color: var(--success); }
-.status.error   { color: var(--error); }
-.status.hidden  { visibility: hidden; }
+.status.success {
+  color: var(--success);
+}
+.status.error {
+  color: var(--error);
+}
+.status.hidden {
+  display: none;
+}
 
 /* === Actions === */
 
@@ -228,7 +252,10 @@ textarea {
   border-radius: 4px;
   padding: 12px 28px;
   box-shadow: var(--shadow-hard);
-  transition: transform 120ms ease, box-shadow 120ms ease, background 150ms ease;
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease,
+    background 150ms ease;
 }
 
 .btn:active {
@@ -266,11 +293,26 @@ textarea {
   flex-direction: column;
 }
 
-.footer .stripe-band:nth-child(1) { height: clamp(12px, 3.75vw, 30px); background: var(--stripe-1); }
-.footer .stripe-band:nth-child(2) { height: clamp(12px, 3.75vw, 30px); background: var(--stripe-2); }
-.footer .stripe-band:nth-child(3) { height: clamp(12px, 3.75vw, 30px); background: var(--stripe-3); }
-.footer .stripe-band:nth-child(4) { height: clamp(12px, 3.75vw, 30px); background: var(--stripe-4); }
-.footer .stripe-band:nth-child(5) { height: clamp(12px, 3.75vw, 30px); background: var(--stripe-5); }
+.footer .stripe-band:nth-child(1) {
+  height: clamp(12px, 3.75vw, 30px);
+  background: var(--stripe-1);
+}
+.footer .stripe-band:nth-child(2) {
+  height: clamp(12px, 3.75vw, 30px);
+  background: var(--stripe-2);
+}
+.footer .stripe-band:nth-child(3) {
+  height: clamp(12px, 3.75vw, 30px);
+  background: var(--stripe-3);
+}
+.footer .stripe-band:nth-child(4) {
+  height: clamp(12px, 3.75vw, 30px);
+  background: var(--stripe-4);
+}
+.footer .stripe-band:nth-child(5) {
+  height: clamp(12px, 3.75vw, 30px);
+  background: var(--stripe-5);
+}
 
 /* === Responsive === */
 

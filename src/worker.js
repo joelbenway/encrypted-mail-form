@@ -3,36 +3,69 @@
 // Please see end of file for extended copyright information
 
 import * as openpgp from 'openpgp';
-
-const MAX_MESSAGE_LENGTH = 50000;
-const MAX_KEY_LENGTH = 20000;
-const MAX_REQUESTS_PER_HOUR = 5;
-const RATE_WINDOW_MS = 60 * 60 * 1000;
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-const requestTimestamps = new Map();
+import {
+  MAX_MESSAGE_LENGTH,
+  MAX_KEY_LENGTH,
+  EMAIL_REGEX,
+  isCompletePgpKey,
+} from './shared/index.js';
 
 function jsonResponse(body, status) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { 'Content-Type': 'application/json' }
+    headers: { 'Content-Type': 'application/json' },
   });
 }
 
-function isRateLimited(ip) {
-  const now = Date.now();
-  const recent = (requestTimestamps.get(ip) || []).filter((t) => now - t < RATE_WINDOW_MS);
-  if (recent.length >= MAX_REQUESTS_PER_HOUR) {
-    requestTimestamps.set(ip, recent);
-    return true;
+export class RateLimiter {
+  constructor(state, _env) {
+    this.state = state;
   }
-  recent.push(now);
-  requestTimestamps.set(ip, recent);
-  return false;
+
+  async fetch(request) {
+    const url = new URL(request.url);
+    const ip = url.searchParams.get('ip');
+    if (!ip) {
+      return new Response('Missing ip parameter', { status: 400 });
+    }
+
+    const now = Date.now();
+    const windowStart = now - 60 * 60 * 1000;
+
+    const timestamps = (await this.state.storage.get('timestamps')) || {};
+    const ipTimestamps = (timestamps[ip] || []).filter(t => t > windowStart);
+
+    if (ipTimestamps.length >= 5) {
+      return new Response(JSON.stringify({ limited: true, remaining: 0 }), {
+        status: 429,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    ipTimestamps.push(now);
+    timestamps[ip] = ipTimestamps;
+
+    // Clean up old IPs to prevent unbounded growth
+    for (const [key, times] of Object.entries(timestamps)) {
+      const recent = times.filter(t => t > windowStart);
+      if (recent.length === 0) {
+        delete timestamps[key];
+      } else {
+        timestamps[key] = recent;
+      }
+    }
+
+    await this.state.storage.put('timestamps', timestamps);
+
+    return new Response(JSON.stringify({ limited: false, remaining: 5 - ipTimestamps.length }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 }
 
 export default {
-  async fetch(request, env, ctx) {
+  async fetch(request, env, _ctx) {
     const url = new URL(request.url);
 
     if (url.pathname !== '/api/send-email') {
@@ -44,20 +77,32 @@ export default {
     }
 
     const clientIp = request.headers.get('CF-Connecting-IP') || 'unknown';
-    if (isRateLimited(clientIp)) {
+    const rateLimiterId = env.RATE_LIMITER.idFromName('global');
+    const rateLimiter = env.RATE_LIMITER.get(rateLimiterId);
+    const rateLimitResponse = await rateLimiter.fetch(
+      `https://internal/rate-limit?ip=${encodeURIComponent(clientIp)}`
+    );
+    const rateLimitData = await rateLimitResponse.json();
+
+    if (rateLimitData.limited) {
       return jsonResponse({ error: 'Too many requests, please try again later' }, 429);
     }
 
     let body;
     try {
       body = await request.json();
-    } catch (err) {
+    } catch {
+      return jsonResponse({ error: 'Invalid JSON body' }, 400);
+    }
+
+    if (body === null || typeof body !== 'object') {
       return jsonResponse({ error: 'Invalid JSON body' }, 400);
     }
 
     const email = typeof body.email === 'string' ? body.email.trim() : '';
     const message = typeof body.message === 'string' ? body.message.trim() : '';
-    const senderPublicKey = typeof body.senderPublicKey === 'string' ? body.senderPublicKey.trim() : '';
+    const senderPublicKey =
+      typeof body.senderPublicKey === 'string' ? body.senderPublicKey.trim() : '';
 
     if (!email || !message) {
       return jsonResponse({ error: 'Missing required fields: email and message' }, 400);
@@ -75,18 +120,25 @@ export default {
       return jsonResponse({ error: 'PGP key too large' }, 400);
     }
 
-    if (!env.RECIPIENT_PUBLIC_KEY || !env.RECIPIENT_EMAIL || !env.RESEND_API_KEY || !env.FROM_EMAIL) {
+    if (
+      !env.RECIPIENT_PUBLIC_KEY ||
+      !env.RECIPIENT_EMAIL ||
+      !env.RESEND_API_KEY ||
+      !env.FROM_EMAIL
+    ) {
       return jsonResponse({ error: 'Server configuration error: missing secrets' }, 500);
     }
 
     try {
       const plainTextContent = `Sender: ${email}\nDate: ${new Date().toISOString()}\n\n--- Message Body ---\n${message}`;
 
-      const publicKey = await openpgp.readKey({ armoredKey: env.RECIPIENT_PUBLIC_KEY });
+      const publicKey = await openpgp.readKey({
+        armoredKey: env.RECIPIENT_PUBLIC_KEY,
+      });
 
       const encryptedMessage = await openpgp.encrypt({
         message: await openpgp.createMessage({ text: plainTextContent }),
-        encryptionKeys: publicKey
+        encryptionKeys: publicKey,
       });
 
       const resendPayload = {
@@ -94,26 +146,26 @@ export default {
         to: [env.RECIPIENT_EMAIL],
         reply_to: [email],
         subject: `[Encrypted Contact Form] Message from ${email}`,
-        text: encryptedMessage
+        text: encryptedMessage,
       };
 
-      if (senderPublicKey.startsWith('-----BEGIN PGP PUBLIC KEY BLOCK-----')) {
+      if (isCompletePgpKey(senderPublicKey)) {
         resendPayload.attachments = [
           {
             filename: 'sender-key.asc',
             content: btoa(senderPublicKey),
-            content_type: 'application/pgp-keys'
-          }
+            content_type: 'application/pgp-keys',
+          },
         ];
       }
 
       const resendResponse = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${env.RESEND_API_KEY}`,
-          'Content-Type': 'application/json'
+          Authorization: `Bearer ${env.RESEND_API_KEY}`,
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(resendPayload)
+        body: JSON.stringify(resendPayload),
       });
 
       if (!resendResponse.ok) {
@@ -123,25 +175,24 @@ export default {
       }
 
       return jsonResponse({ success: true, message: 'Encrypted message sent successfully' }, 200);
-
     } catch (err) {
       console.error('Worker encryption/send error:', err);
       return jsonResponse({ error: 'Internal server error processing encrypted email' }, 500);
     }
-  }
+  },
 };
 
-// This file is part of joel.benway.me.
+// This file is part of encrypted-email-form.
 //
-// joel.benway.me is free software: you can redistribute it and/or modify it
+// encrypted-email-form is free software: you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation, either version 3 of the License, or (at your option) any
 // later version.
 //
-// joel.benway.me is distributed in the hope that it will be useful, but WITHOUT
-// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// encrypted-email-form is distributed in the hope that it will be useful, but WITHOUT
+// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY OR FITNESS
 // FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
 // details.
 //
 // You should have received a copy of the GNU General Public License along with
-// joel.benway.me. If not, see <https://www.gnu.org/licenses/>.
+// encrypted-email-form. If not, see <https://www.gnu.org/licenses/>.

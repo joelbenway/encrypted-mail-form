@@ -1,70 +1,93 @@
 ﻿<!-- Copyright (c) 2026  Joel Benway -->
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 <!-- Please see end of file for extended copyright information -->
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Joel Benway</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
-</head>
-<body>
-
-<header class="header">
-  <div class="header-inner">
-    <h1 class="name">JOEL BENWAY</h1>
-    <nav class="nav-links">
-      <a class="pill" href="https://github.com/joelbenway" target="_blank" rel="noopener">GitHub</a>
-      <a class="pill" href="https://x.com/joelbenway" target="_blank" rel="noopener">Twitter</a>
-      <a class="pill" href="https://linkedin.com/in/jbenway" target="_blank" rel="noopener">LinkedIn</a>
-    </nav>
-  </div>
-</header>
-
-<main class="main">
-  <div class="main-inner">
-    <form id="contact-form" class="form" novalidate>
-
-      <div class="field">
-        <label for="sender-email">Your email</label>
-        <input type="email" id="sender-email" name="email" placeholder="you@example.com" autocomplete="email">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Joel Benway</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="header">
+      <div class="header-inner">
+        <h1 class="name">JOEL BENWAY</h1>
+        <nav class="nav-links">
+          <a class="pill" href="https://github.com/joelbenway" target="_blank" rel="noopener"
+            >GitHub</a
+          >
+          <a class="pill" href="https://x.com/joelbenway" target="_blank" rel="noopener">Twitter</a>
+          <a class="pill" href="https://linkedin.com/in/jbenway" target="_blank" rel="noopener"
+            >LinkedIn</a
+          >
+        </nav>
       </div>
+    </header>
 
-      <div class="field">
-        <label for="message">Message</label>
-        <textarea id="message" name="message" rows="5" placeholder="Write your message…"></textarea>
+    <main class="main">
+      <div class="main-inner">
+        <form id="contact-form" class="form" novalidate>
+          <div class="field">
+            <label for="sender-email">Your email</label>
+            <input
+              type="email"
+              id="sender-email"
+              name="email"
+              placeholder="you@example.com"
+              autocomplete="email"
+            />
+          </div>
+
+          <div class="field">
+            <label for="message">Message</label>
+            <textarea
+              id="message"
+              name="message"
+              rows="5"
+              placeholder="Write your message…"
+            ></textarea>
+          </div>
+
+          <div class="field">
+            <label for="sender-key"
+              >Your PGP public key
+              <span class="optional">optional — attach for encrypted reply</span></label
+            >
+            <textarea
+              id="sender-key"
+              name="senderKey"
+              rows="4"
+              placeholder="-----BEGIN PGP PUBLIC KEY BLOCK-----"
+            ></textarea>
+          </div>
+
+          <div id="status-message" class="status" role="status" aria-live="polite"></div>
+
+          <div class="actions">
+            <button type="submit" id="submit-btn" class="btn btn-primary">Send</button>
+            <button type="reset" class="btn btn-reset">Reset</button>
+          </div>
+        </form>
       </div>
+    </main>
 
-      <div class="field">
-        <label for="sender-key">Your PGP public key <span class="optional">optional — attach for encrypted reply</span></label>
-        <textarea id="sender-key" name="senderKey" rows="4" placeholder="-----BEGIN PGP PUBLIC KEY BLOCK-----"></textarea>
-      </div>
+    <footer class="footer">
+      <div class="stripe-band"></div>
+      <div class="stripe-band"></div>
+      <div class="stripe-band"></div>
+      <div class="stripe-band"></div>
+      <div class="stripe-band"></div>
+    </footer>
 
-      <div id="status-message" class="status" role="status" aria-live="polite"></div>
-
-      <div class="actions">
-        <button type="submit" id="submit-btn" class="btn btn-primary">Send</button>
-        <button type="reset" class="btn btn-reset">Reset</button>
-      </div>
-
-    </form>
-  </div>
-</main>
-
-<footer class="footer">
-  <div class="stripe-band"></div>
-  <div class="stripe-band"></div>
-  <div class="stripe-band"></div>
-  <div class="stripe-band"></div>
-  <div class="stripe-band"></div>
-</footer>
-
-<script src="app.js"></script>
-</body>
+    <script src="app.js"></script>
+  </body>
 </html>
 
 <!-- This file is part of joel.benway.me.

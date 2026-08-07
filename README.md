@@ -3,6 +3,7 @@
 A lightweight personal website built with Cloudflare Workers that allows anyone to send you PGP-encrypted emails without revealing your email address or requiring the sender to configure PGP locally.
 
 ## Features
+
 - **Client-side PGP Auto-Lookup:** Queries `keys.openpgp.org` automatically when a user enters their email address.
 - **Server-side PGP Encryption:** Encrypts incoming messages with your public key in the Cloudflare Worker edge runtime.
 - **MIME PGP Key Attachment:** Automatically attaches the sender's PGP key as `sender-key.asc` (`application/pgp-keys`) so your email client (e.g. Proton Mail) can import it easily.
@@ -13,11 +14,13 @@ A lightweight personal website built with Cloudflare Workers that allows anyone 
 ## Local Development
 
 1. Install dependencies:
+
    ```bash
    npm install
    ```
 
 2. Run local development server:
+
    ```bash
    npm run dev
    ```
@@ -29,6 +32,7 @@ A lightweight personal website built with Cloudflare Workers that allows anyone 
 ## Deployment & Setup Guide
 
 ### 1. Set Up Cloudflare Secrets
+
 Run the following commands using Wrangler CLI to set your backend secrets in Cloudflare:
 
 ```bash
@@ -46,12 +50,15 @@ npx wrangler secret put FROM_EMAIL
 ```
 
 ### 2. Manual Deployment
+
 To deploy directly from your local terminal:
+
 ```bash
 npx wrangler deploy
 ```
 
 ### 3. Automated Deployment via GitHub Actions
+
 1. Go to your GitHub Repository Settings -> **Secrets and variables** -> **Actions**.
 2. Add a new Repository Secret:
    - **Name:** `CLOUDFLARE_API_TOKEN`
