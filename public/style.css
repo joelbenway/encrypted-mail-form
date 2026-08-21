@@ -68,19 +68,45 @@ a {
 
 .header {
   width: 100%;
+  position: relative;
   border-bottom: 2px solid var(--text);
+  overflow: hidden;
 }
 
+.header-stripes {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  z-index: 0;
+}
+
+.header-stripes .stripe-band {
+  flex: 1;
+  background: var(--stripe, var(--stripe-1));
+}
+
+.header-stripes .stripe-band:nth-child(1) { --stripe: var(--stripe-1); }
+.header-stripes .stripe-band:nth-child(2) { --stripe: var(--stripe-2); }
+.header-stripes .stripe-band:nth-child(3) { --stripe: var(--stripe-3); }
+.header-stripes .stripe-band:nth-child(4) { --stripe: var(--stripe-4); }
+.header-stripes .stripe-band:nth-child(5) { --stripe: var(--stripe-5); }
+
 .header-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 1100px;
+  width: 92%;
+  margin: 0 auto;
+  padding: 32px 0;
+}
+
+.header-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
   gap: 16px;
-  max-width: 1100px;
-  width: 92%;
-  margin: 0 auto;
-  padding: 32px 0;
 }
 
 .name {
@@ -88,10 +114,10 @@ a {
   font-weight: 900;
   font-size: clamp(1.8rem, 5vw, 3rem);
   letter-spacing: 0.05em;
-  color: var(--text);
+  color: var(--surface);
   line-height: 1;
   text-transform: uppercase;
-  text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.08);
+  text-shadow: 3px 3px 0px var(--text);
 }
 
 .nav-links {
@@ -284,40 +310,10 @@ textarea {
   transform: translate(2px, 2px);
 }
 
-/* === Footer (Mistral Sunset Stripes) === */
-
-.footer {
-  width: 100%;
-  margin-top: auto;
-  display: flex;
-  flex-direction: column;
-}
-
-.footer .stripe-band:nth-child(1) {
-  height: clamp(12px, 3.75vw, 30px);
-  background: var(--stripe-1);
-}
-.footer .stripe-band:nth-child(2) {
-  height: clamp(12px, 3.75vw, 30px);
-  background: var(--stripe-2);
-}
-.footer .stripe-band:nth-child(3) {
-  height: clamp(12px, 3.75vw, 30px);
-  background: var(--stripe-3);
-}
-.footer .stripe-band:nth-child(4) {
-  height: clamp(12px, 3.75vw, 30px);
-  background: var(--stripe-4);
-}
-.footer .stripe-band:nth-child(5) {
-  height: clamp(12px, 3.75vw, 30px);
-  background: var(--stripe-5);
-}
-
 /* === Responsive === */
 
 @media (max-width: 600px) {
-  .header-inner {
+  .header-content {
     flex-direction: column;
     align-items: flex-start;
     gap: 20px;
