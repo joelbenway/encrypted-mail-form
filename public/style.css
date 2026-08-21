@@ -86,11 +86,21 @@ a {
   background: var(--stripe, var(--stripe-1));
 }
 
-.header-stripes .stripe-band:nth-child(1) { --stripe: var(--stripe-1); }
-.header-stripes .stripe-band:nth-child(2) { --stripe: var(--stripe-2); }
-.header-stripes .stripe-band:nth-child(3) { --stripe: var(--stripe-3); }
-.header-stripes .stripe-band:nth-child(4) { --stripe: var(--stripe-4); }
-.header-stripes .stripe-band:nth-child(5) { --stripe: var(--stripe-5); }
+.header-stripes .stripe-band:nth-child(1) {
+  --stripe: var(--stripe-1);
+}
+.header-stripes .stripe-band:nth-child(2) {
+  --stripe: var(--stripe-2);
+}
+.header-stripes .stripe-band:nth-child(3) {
+  --stripe: var(--stripe-3);
+}
+.header-stripes .stripe-band:nth-child(4) {
+  --stripe: var(--stripe-4);
+}
+.header-stripes .stripe-band:nth-child(5) {
+  --stripe: var(--stripe-5);
+}
 
 .header-inner {
   position: relative;
